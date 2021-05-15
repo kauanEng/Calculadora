@@ -1,6 +1,9 @@
 class CalcController {
     constructor() {
 
+        this._lastOperator = '';
+        this._lastNumber = '';
+
         this._operation = [];
         this.locale = 'pt-BR';
         this._displayCalcEl = document.querySelector("#display");
@@ -11,12 +14,12 @@ class CalcController {
         this.initButtonsEvents();
     }
 
-    initialize(){
+    initialize() {
 
-    this.setDisplayDateTime();
-    
-    setInterval(() => {
         this.setDisplayDateTime();
+
+        setInterval(() => {
+            this.setDisplayDateTime();
         }, 1000);
 
         this.setDisplayDateTime();
@@ -25,7 +28,7 @@ class CalcController {
 
     addEventListenerAll(element, events, fn) {  //criado para adicionar 2 eventos o botão ao mesmo tempo
         events.split(' ').forEach(event => {
-        element.addEventListener(event, fn, false)
+            element.addEventListener(event, fn, false)
 
         });
     }
@@ -46,7 +49,7 @@ class CalcController {
 
 
     getlastOperation() {
-        return this._operation[this._operation.length-1];
+        return this._operation[this._operation.length - 1];
     }
 
 
@@ -57,112 +60,142 @@ class CalcController {
 
 
     isOperator(value) {
-        return (['+', '-', '*', '/', '%'].indexOf(value) > -1); 
+        return (['+', '-', '*', '/', '%'].indexOf(value) > -1);
     }
 
     pushOperator(value) {
         this._operation.push(value);
 
-        if (this._operation.length > 3 ) {
+        if (this._operation.length > 3) {
 
 
             this.calc();
-          
         }
-
     }
+
+    
+    getResult() {
+
+
+
+        return eval(this._operation.join(""));
+    }
+
+
 
     calc() {
+        let last = '';
 
-    let last = '';
+        this._lastOperator = this.getLastItem();
 
-    if(this._operation.length > 3) {
-        last = this._operation.pop();
+
+        if(this._operation.length < 3) {
+
+            let firstItem = this._operation[0];
+            this._operation = [firstItem, this._lastOperator, this._lastNumber];
+        }
+
+
+        if (this._operation.length > 3) {
+
+            last = this._operation.pop();
+            this._lastNumber = this.getResult();
+
+        }else if (this._operation.length == 3) {
+           
+            this._lastNumber = this.getLastItem(false);
+        }
+
+        let result = this.getResult();
+
+        if (last == '%') {
+
+            result /= 100;
+            this._operation = [result];
+
+        } else {
+            this._operation = [result];
+
+            if (last) this._operation.push(last);
+
+        }
+
+        this.setLastNumberToDisplay();
     }
 
-    let result = eval(this._operation.join(""));
 
-    if(last == '%') {
 
-        result /= 100;
-        this._operation = [result];
+    getLastItem(isOperator = true) {
+        let lastItem;
 
-    }else{
-        this._operation = [result];
+        for (let i = this._operation.length - 1; i >= 0; i--) {
 
-        if(last) this._operation.push(last);
-
-    }
-        
-    this.setLastNumberToDisplay();
-}
-
-    setLastNumberToDisplay(){
-
-        let lastNumber;
-
-        for (let i = this._operation.length -1; i >= 0; i--) {
-
-            if(!this.isOperator(this._operation[i])) {
-
-                lastNumber = this._operation[i];
-
-                break;
+                if (this.isOperator(this._operation[i]) === isOperator) {
+                    lastItem = this._operation[i];
+                    break;
             }
         }
 
-        if(!lastNumber) lastNumber = 0; {
-
+        if(!lastItem) {
+            lastItem = (isOperator) ? this._lastOperator : this._lastNumber;
         }
 
+        return lastItem;
+    }
+
+
+    setLastNumberToDisplay() {
+
+        let lastNumber = this.getLastItem(false);
+
+        if (!lastNumber) lastNumber = 0;
+
         this.displayCalc = lastNumber;
-}
-
-
+    }
 
 
 
     addOperation(value) {
 
-        if(isNaN(this.getlastOperation())) {
+        if (isNaN(this.getlastOperation())) {
 
-            if(this.isOperator(value)) {
+            if (this.isOperator(value)) {
 
                 this.setLastOperation(value);
 
-            }else if (isNaN(value)) {
+            } else if (isNaN(value)) {
 
                 console.log(value);
 
-            }else {
+            } else {
 
                 this.pushOperator(value);
 
                 this.setLastNumberToDisplay();
 
-            }   
+            }
 
-        }else{
+        } else {
 
-            if(this.isOperator(value)) {
+            if (this.isOperator(value)) {
 
                 this.pushOperator(value);
 
-            }else {
+            } else {
 
-            let newValue = this.getlastOperation().toString() + value.toString();
-            this.setLastOperation(parseInt(newValue));
+                let newValue = this.getlastOperation().toString() + value.toString();
+                this.setLastOperation(parseInt(newValue));
 
-            //atualizar display
+                //atualizar display
 
-            this.setLastNumberToDisplay();
+                this.setLastNumberToDisplay();
 
 
 
             }
         }
 
-       
+
 
         console.log(this._operation);
 
@@ -176,49 +209,49 @@ class CalcController {
 
     execBtn(value) {
         switch (value) {
-                case 'ac':
+            case 'ac':
                 this.clearAll();
-            break;
-                case 'ce':
+                break;
+            case 'ce':
                 this.clearEntry();
-            break;
-                case 'soma':
-                    this.addOperation('+');
-            break;
-                case 'subtracao':
-                    this.addOperation('-');
-            break;
-                case 'divisao':
-                    this.addOperation('/');
-            break;
-                case 'multiplicacao':
-                    this.addOperation('*');
-            break;
-                case 'porcento':
-                    this.addOperation('%');
-            break;
-                case 'igual':
-                    this.calc();
-            break;
-                case 'ponto':
-                    this.addOperation('.');
-            break;
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-                    this.addOperation(parseInt(value));
-            break;
+                break;
+            case 'soma':
+                this.addOperation('+');
+                break;
+            case 'subtracao':
+                this.addOperation('-');
+                break;
+            case 'divisao':
+                this.addOperation('/');
+                break;
+            case 'multiplicacao':
+                this.addOperation('*');
+                break;
+            case 'porcento':
+                this.addOperation('%');
+                break;
+            case 'igual':
+                this.calc();
+                break;
+            case 'ponto':
+                this.addOperation('.');
+                break;
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+                this.addOperation(parseInt(value));
+                break;
 
-        default: 
-            this.setError();
-            break;
+            default:
+                this.setError();
+                break;
         }
     }
 
@@ -227,7 +260,7 @@ class CalcController {
 
         buttons.forEach((btn, index) => {
             this.addEventListenerAll(btn, 'click drag', e => {
-                
+
                 let textBtn = btn.className.baseVal.replace('btn-', "");
 
                 this.execBtn(textBtn);
@@ -242,14 +275,14 @@ class CalcController {
     }
 
 
-    setDisplayDateTime(){
-    
-    this.displayDate = this.currentDate.toLocaleDateString(this.locale, {
-        day: "2-digit",
-        month: "long",
-        year: "numeric"
-    });
-    this.displayTime = this.currentDate.toLocaleTimeString(this.locale);
+    setDisplayDateTime() {
+
+        this.displayDate = this.currentDate.toLocaleDateString(this.locale, {
+            day: "2-digit",
+            month: "long",
+            year: "numeric"
+        });
+        this.displayTime = this.currentDate.toLocaleTimeString(this.locale);
 
     }
 
@@ -261,17 +294,17 @@ class CalcController {
     }
 
 
-   set displayTime(value) {
-    return this._timeEl.innerHTML = value;
-   }
+    set displayTime(value) {
+        return this._timeEl.innerHTML = value;
+    }
 
 
-   get displayDate() {
-    return this._dateEl.innerHTML;
-    }   
+    get displayDate() {
+        return this._dateEl.innerHTML;
+    }
 
-   set displayDate(value) {
-    return this._dateEl.innerHTML = value;
+    set displayDate(value) {
+        return this._dateEl.innerHTML = value;
     }
 
 
@@ -280,7 +313,7 @@ class CalcController {
     }
 
     set displayCalc(value) {
-        this._displayCalcEl.innerHTML = value; 
+        this._displayCalcEl.innerHTML = value;
     }
 
     get currentDate() {
